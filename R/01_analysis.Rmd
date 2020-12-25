@@ -1,9 +1,7 @@
 ---
-title:
-  '01 Analysis - `r unlist(strsplit(getwd(), "/"))[length(unlist(strsplit(getwd(), "/"))) - 1]`'
+title: "IC Papers Analysis"
 author:
   - name: "Emir Turkes [emir.turkes@eturkes.com]"
-  - name: "UK Dementia Research Institute at UCL"
 date: '`r strftime(Sys.time(), format = "%B %d, %Y")`'
 link-citations: true
 output:
@@ -42,7 +40,10 @@ div.main-container {max-width: none; width: 100%;}
 
 *This file is a part of [IC Papers Analysis](https://github.com/eturkes/ic-papers-analysis).*
 
-The data here is derived from @`r unlist(strsplit(getwd(), "/"))[length(unlist(strsplit(getwd(), "/"))) - 1]` and will be referenced using the name ``r unlist(strsplit(getwd(), "/"))[length(unlist(strsplit(getwd(), "/"))) - 1]``.
+A quick analysis of research articles that use or discuss Intellicage.
+
+R code used in each section can be expanded with the CODE button at the right.  
+Toggling the first CODE button at the start of the document enables showing and hiding of all code.
 
 ```{r}
 # Load in necessary boilerplate and libraries.
@@ -67,11 +68,56 @@ The data here is derived from @`r unlist(strsplit(getwd(), "/"))[length(unlist(s
 #    Emir Turkes can be contacted at emir.turkes@eturkes.com
 
 options(stringsAsFactors = FALSE)
-packages <- "conflicted"
+packages <- c("conflicted", "bib2df", "dplyr", "ggplot2", "DT")
 invisible(suppressPackageStartupMessages(lapply(packages, library, character.only = TRUE)))
+conflict_prefer("filter", "dplyr", quiet = TRUE)
+source("utils.R")
 
-knitr::opts_chunk$set(fig.height = 10, fig.width = 15)
+knitr::opts_chunk$set(dpi = 300)
 # --------------------------------------------
+```
+
+# Raw Data
+
+```{r}
+data <- suppressWarnings(bib2df(file.path("..", "ic-papers.bib")))
+data <- data[-which(data$YEAR == "2021"), ] # Only include years that have fully passed.
+
+datatable_download(data[ , c(5, 13, 23, 26, 29)])
+```
+
+# Figures
+
+## Publications Per Year
+
+```{r}
+ggplot(data, aes(YEAR)) +
+  stat_count(geom = "line", aes(y = ..count..), size = 0.5, color = "#0072B2") + 
+  stat_count(
+    geom = "point", aes(y = ..count..), color = "white", fill = "#0072B2", shape = 21, size = 2
+  ) +
+  scale_x_continuous(n.breaks = length(unique(data$YEAR))) +
+  scale_y_continuous(n.breaks = length(unique(data$YEAR))) +
+  labs(x = "Year", y = "Number of Publications") +
+  theme_classic() +
+  theme(panel.grid.major = element_line(colour = "grey92")) +
+  ggtitle("Number of Intellicage Publications in Each Year")
+```
+
+## Publications Over Time (Cumulative)
+
+```{r}
+ggplot(data, aes(YEAR)) +
+  stat_count(geom = "line", aes(y = cumsum(..count..)), size = 0.5, color = "#0072B2") + 
+  stat_count(
+    geom = "point", aes(y = cumsum(..count..)), color = "white", fill = "#0072B2", shape = 21, size = 2
+  ) +
+  scale_x_continuous(n.breaks = length(unique(data$YEAR))) +
+  scale_y_continuous(n.breaks = 15) +
+  labs(x = "Year", y = "Number of Publications") +
+  theme_classic() +
+  theme(panel.grid.major = element_line(colour = "grey92")) +
+  ggtitle("Number of Intellicage Publications Over Time (Cumulative)")
 ```
 
 # References
