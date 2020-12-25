@@ -63,7 +63,6 @@ Toggling the first CODE button at the start of the document enables showing and 
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-options(stringsAsFactors = FALSE)
 packages <- c("conflicted", "bib2df", "dplyr", "ggplot2", "DT")
 invisible(suppressPackageStartupMessages(lapply(packages, library, character.only = TRUE)))
 conflict_prefer("filter", "dplyr", quiet = TRUE)
