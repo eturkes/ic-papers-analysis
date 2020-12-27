@@ -15,6 +15,6 @@ limitations under the License.
 -->
 
 # IC Papers Analysis
-#### *This analysis is a work-in-progress*
+#### *This analysis is complete, but may be revisted in the future*
 
 Data mining of Intellicage papers
