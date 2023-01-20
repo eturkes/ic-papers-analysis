@@ -76,7 +76,7 @@ knitr::opts_chunk$set(dpi = 300)
 
 ```{r}
 data <- suppressWarnings(bib2df(file.path("..", "ic-papers.bib")))
-data <- data[-which(data$YEAR == "2022"), ] # Only include years that have fully passed.
+data <- data[-which(data$YEAR == "2023"), ] # Only include years that have fully passed.
 
 datatable_download(data[ , c(5, 13, 23, 26, 29)])
 ```
