@@ -49,7 +49,7 @@ Toggling the first CODE button at the start of the document enables showing and 
 # Load in necessary boilerplate and libraries.
 # --------------------------------------------
 
-# Copyright 2020 Emir Turkes
+# Copyright 2020-2023 Emir Turkes
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
