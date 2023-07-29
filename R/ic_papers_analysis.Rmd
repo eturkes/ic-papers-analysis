@@ -63,7 +63,7 @@ Toggling the first CODE button at the start of the document enables showing and 
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-packages <- c("conflicted", "bib2df", "dplyr", "ggplot2", "DT")
+packages <- c("conflicted", "bib2df", "dplyr", "ggplot2", "DT", "scales", "pals")
 invisible(suppressPackageStartupMessages(lapply(packages, library, character.only = TRUE)))
 conflict_prefer("filter", "dplyr", quiet = TRUE)
 source("utils.R")
@@ -79,6 +79,26 @@ data <- suppressWarnings(bib2df(file.path("..", "ic-papers.bib")))
 data <- data[-which(data$YEAR == "2023"), ] # Only include years that have fully passed.
 
 datatable_download(data[ , c(5, 13, 23, 26, 29)])
+
+categories <- read.csv(file.path("..", "assets", "paper-categories.csv"), row.names = 1)
+
+datatable_download(categories)
+
+categories <- lapply(split(categories, row.names(categories)), unlist)
+categories <- lapply(categories, function(x) x[!(x == "")])
+
+categories_df <- data.frame(Category = names(categories))
+categories_df$`Number of Papers` <- unlist(lapply(categories, length))
+
+categories_df <- categories_df %>%
+  mutate(Proportion = `Number of Papers` / sum(`Number of Papers`)) %>%
+  arrange(Proportion) %>%
+  mutate(Percentage = percent(Proportion))
+
+categories_df <- categories_df[order(categories_df$`Number of Papers`, decreasing = TRUE), ]
+rownames(categories_df) <- NULL
+
+datatable_download(categories_df)
 ```
 
 # Figures
@@ -113,6 +133,74 @@ ggplot(data, aes(YEAR)) +
   theme_classic() +
   theme(panel.grid.major = element_line(colour = "grey92")) +
   ggtitle("Number of Intellicage Publications Over Time (Cumulative)")
+```
+
+## Papers Per Study Area
+
+### Full Pie Chart
+
+```{r}
+ggplot(categories_df, aes("", Proportion, fill = Category)) +
+  geom_col(color = "black") +
+  geom_label(
+    aes(label = paste0("Papers: ", `Number of Papers`, " (", Percentage, ")")),
+    position = position_stack(vjust = 0.5),
+    show.legend = FALSE,
+    size = 3
+  ) +
+  guides(fill = guide_legend(title = "Category")) +
+  coord_polar(theta = "y") +
+  theme_void() +
+  scale_fill_manual(values = cols25(nrow(categories_df))) +
+  ggtitle("Papers Per Study Area")
+```
+
+### Top 5 Categories Pie Chart
+
+```{r}
+categories_df_small <- categories_df[1:4, 1:2]
+new_row <- data.frame("Other", sum(categories_df$`Number of Papers`[5:18]))
+colnames(new_row) <- c("Category", "Number of Papers")
+categories_df_small <- rbind(categories_df_small, new_row)
+
+categories_df_small <- categories_df_small %>%
+  mutate(Proportion = `Number of Papers` / sum(`Number of Papers`)) %>%
+  arrange(Proportion) %>%
+  mutate(Percentage = percent(Proportion))
+
+categories_df_small <- categories_df_small[order(categories_df_small$`Number of Papers`, decreasing = TRUE), ]
+rownames(categories_df_small) <- NULL
+
+ggplot(categories_df_small, aes("", Proportion, fill = Category)) +
+  geom_col(color = "black") +
+  geom_label(
+    aes(label = paste0(`Number of Papers`, " (", Percentage, ")")), position = position_stack(vjust = 0.5),
+    show.legend = FALSE
+  ) +
+  guides(fill = guide_legend(title = "Category")) +
+  coord_polar(theta = "y") +
+  theme_void() +
+  scale_fill_manual(values = cols25(nrow(categories_df_small))) +
+  ggtitle("Papers Per Study Area")
+```
+
+### Bar Chart
+
+```{r, fig.width = 8}
+categories_df$Category <- factor(categories_df$Category, rev(categories_df$Category))
+sum <- sum(categories_df$`Number of Papers`)
+
+ggplot(categories_df, aes(Category, `Number of Papers`, fill = Category)) +
+  geom_bar(stat = "identity") +
+  scale_y_continuous(
+    sec.axis = sec_axis(~. / sum * 100, name = "Percentage of Total Papers", breaks = seq(0, 20, 1)),
+    breaks = seq(0, 60, 2)
+  ) +
+  coord_flip() +
+  theme_classic() +
+  theme(panel.grid.major = element_line(colour = "grey92"), legend.position = "none") +
+  geom_col(color = "black") +
+  ggtitle("Papers Per Study Area")
 ```
 
 # References
